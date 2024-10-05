@@ -90,7 +90,8 @@ class RequestsTab extends StatelessWidget {
                               final creatorDoc = await FirebaseFirestore
                                   .instance
                                   .collection('creator')
-                                  .doc(post.reference.parent.parent!.id)
+                                  .doc(post
+                                      .reference.parent.parent!.id) // School ID
                                   .get();
 
                               // Extract the creator's department
@@ -109,7 +110,7 @@ class RequestsTab extends StatelessWidget {
                                 collectionName = 'CAS';
                               } else {
                                 collectionName =
-                                    'Non-Acad'; // Default to Non-Acad for non-academic departments
+                                    'Non Academic'; // Default to Non-Acad for non-academic departments
                               }
 
                               // Update the post's status to "Accepted"
@@ -121,11 +122,41 @@ class RequestsTab extends StatelessWidget {
                                   .doc(post.id) // Post ID
                                   .update({'status': 'Accepted'});
 
+                              // Store the accepted request in the 'requests' collection under 'accepted' sub-collection
+                              await FirebaseFirestore.instance
+                                  .collection(
+                                      'requests') // The main requests collection
+                                  .doc(
+                                      'accepted') // Sub-collection for accepted requests
+                                  .collection(
+                                      'accepted_requests') // Collection for accepted posts
+                                  .add({
+                                'title': postData['title'],
+                                'content': postData['content'],
+                                'timestamp': postData['timestamp'],
+                                'status': 'Accepted',
+                                'creatorId': post.reference.parent.parent!
+                                    .id, // Store the creator's ID
+                              });
+
+                              // Store the accepted request in the respective department collection (CAS, CEAC, etc.)
+                              await FirebaseFirestore.instance
+                                  .collection(
+                                      collectionName) // The department collection (CAS, CEAC, etc.)
+                                  .add({
+                                'title': postData['title'],
+                                'content': postData['content'],
+                                'timestamp': postData['timestamp'],
+                                'status': 'Accepted',
+                                'creatorId': post.reference.parent.parent!
+                                    .id, // Store the creator's ID
+                              });
+
                               // Show success message
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                     content: Text(
-                                        'Request accepted and moved to $collectionName collection')),
+                                        'Request accepted and moved to $collectionName and accepted collection')),
                               );
                             } catch (e) {
                               // Show error message
