@@ -46,36 +46,68 @@ class DeclinedTab extends StatelessWidget {
             final post = filteredPosts[index];
             final postData = post.data() as Map<String, dynamic>;
 
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      postData['title'] ?? 'N/A',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+            return FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance
+                  .collection('creator')
+                  .doc(post.reference.parent.parent!.id)
+                  .get(),
+              builder:
+                  (context, AsyncSnapshot<DocumentSnapshot> creatorSnapshot) {
+                if (creatorSnapshot.connectionState ==
+                    ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!creatorSnapshot.hasData || !creatorSnapshot.data!.exists) {
+                  return const Center(
+                      child: Text('Creator information not available.'));
+                }
+
+                final creatorData =
+                    creatorSnapshot.data!.data() as Map<String, dynamic>;
+                final clubName = creatorData['clubName'] ?? 'Unknown Club';
+
+                return Card(
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          clubName, // Displaying the club name
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4), // Small spacing
+                        Text(
+                          postData['title'] ?? 'N/A',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          postData['content'] ?? 'N/A',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          postData['timestamp'] != null
+                              ? DateFormat('MMMM-dd-yyyy hh:mm a').format(
+                                  (postData['timestamp'] as Timestamp).toDate())
+                              : 'N/A',
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      postData['content'] ?? 'N/A',
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      postData['timestamp'] != null
-                          ? DateFormat('MMMM-dd-yyyy hh:mm a').format(
-                              (postData['timestamp'] as Timestamp).toDate())
-                          : 'N/A',
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             );
           },
         );

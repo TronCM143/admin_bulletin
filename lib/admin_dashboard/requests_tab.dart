@@ -57,6 +57,7 @@ class RequestsTab extends StatelessWidget {
                 final creatorData =
                     creatorSnapshot.data!.data() as Map<String, dynamic>;
                 final department = creatorData['department'] ?? 'Unknown';
+                final clubName = creatorData['clubName'] ?? 'Unknown Club';
 
                 return Card(
                   margin:
@@ -66,6 +67,14 @@ class RequestsTab extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text(
+                          clubName, // Displaying the club name
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4), // Small spacing
                         Text(
                           postData['title'] ?? 'N/A',
                           style: const TextStyle(
