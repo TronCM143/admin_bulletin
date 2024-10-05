@@ -1,16 +1,16 @@
 name: bulletin_admin
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.0
-
-environment:
-  sdk: ^3.6.0-255.0.dev
-# froilan version
-
-# version: 1.0.0+1
+# version: 0.1.0
 
 # environment:
-#   sdk: ^3.6.0-216.1.beta
+#   sdk: ^3.6.0-255.0.dev
+# # froilan version
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.0-216.1.beta
 # ervon version
 
 dependencies:
