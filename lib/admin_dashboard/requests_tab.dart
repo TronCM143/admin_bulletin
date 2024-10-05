@@ -86,21 +86,46 @@ class RequestsTab extends StatelessWidget {
                             );
 
                             try {
-                              // Accept the post and update the status to 'Accepted'
+                              // Get the creator's document from the 'creator' collection based on School ID
+                              final creatorDoc = await FirebaseFirestore
+                                  .instance
+                                  .collection('creator')
+                                  .doc(post.reference.parent.parent!.id)
+                                  .get();
+
+                              // Extract the creator's department
+                              String department =
+                                  creatorDoc.data()!['department'];
+
+                              // Determine the correct collection based on the department
+                              String collectionName;
+                              if (department == 'CEAC') {
+                                collectionName = 'CEAC';
+                              } else if (department == 'CED') {
+                                collectionName = 'CED';
+                              } else if (department == 'CBA') {
+                                collectionName = 'CBA';
+                              } else if (department == 'CAS') {
+                                collectionName = 'CAS';
+                              } else {
+                                collectionName =
+                                    'Non-Acad'; // Default to Non-Acad for non-academic departments
+                              }
+
+                              // Update the post's status to "Accepted"
                               await FirebaseFirestore.instance
-                                  .collection(
-                                      'creator') // Changed from 'users' to 'creator'
+                                  .collection('creator')
                                   .doc(post
                                       .reference.parent.parent!.id) // School ID
                                   .collection('posts')
                                   .doc(post.id) // Post ID
-                                  .update({
-                                'status': 'Accepted'
-                              }); // Set status to accepted
+                                  .update({'status': 'Accepted'});
 
                               // Show success message
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Request accepted')),
+                                SnackBar(
+                                    content: Text(
+                                        'Request accepted and moved to $collectionName collection')),
                               );
                             } catch (e) {
                               // Show error message
