@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // Importing intl package for date formatting
 
 class DeclinedTab extends StatelessWidget {
   @override
@@ -67,9 +68,8 @@ class DeclinedTab extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       postData['timestamp'] != null
-                          ? (postData['timestamp'] as Timestamp)
-                              .toDate()
-                              .toString()
+                          ? DateFormat('MMMM-dd-yyyy hh:mm a').format(
+                              (postData['timestamp'] as Timestamp).toDate())
                           : 'N/A',
                       style: const TextStyle(color: Colors.grey),
                     ),
