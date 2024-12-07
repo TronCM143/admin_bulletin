@@ -1,6 +1,6 @@
+import 'package:bulletin_admin/loginpage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:bulletin_admin/admin_home.dart'; // Ensure the path is correct
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,10 +22,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Bulletin Board'),
-        ),
-        body: HomeScreen(), // Call the AllPostsPage here
+        body: LoginPage(), // Call the AllPostsPage here
       ),
     );
   }

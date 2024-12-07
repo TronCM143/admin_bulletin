@@ -20,6 +20,9 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A new Flutter project.">
 
+  <!-- Specify the renderer for Flutter web (html or canvas). -->
+  <meta name="flutter-web-renderer" content="html">
+
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -34,6 +37,7 @@
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
+
   <script type="module">
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "firebase/app";
@@ -58,5 +62,6 @@
     const analytics = getAnalytics(app);
 
   </script>
+
 </body>
 </html>
