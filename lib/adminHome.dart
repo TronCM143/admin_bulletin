@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:html' as html; // Import for web reload
-import 'Post/accepted_post.dart';
-import 'Post/pending_post.dart';
-import 'Post/rejected_post.dart';
+import 'Post/post_main.dart'; // A new widget to display all posts with labels
+import 'package:bulletin_admin/Account/account_verity.dart';
 
 class AdminHome extends StatelessWidget {
   final String username;
@@ -12,7 +11,8 @@ class AdminHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3, // Make sure this matches the number of children in TabBarView
+      length:
+          2, // Updated to reflect the reduced tabs (1 for posts + 1 for account verification)
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.green.shade600,
@@ -23,14 +23,16 @@ class AdminHome extends StatelessWidget {
           ),
           centerTitle: true,
           bottom: const TabBar(
-            labelColor: Colors.white, // Text color for selected tab
-            unselectedLabelColor:
-                Colors.black, // Text color for unselected tabs
-            indicatorColor: Colors.white, // Underline color
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.black,
+            indicatorColor: Colors.white,
             tabs: [
-              Tab(text: "Pending"),
-              Tab(text: "Accepted"),
-              Tab(text: "Rejected"),
+              Tab(
+                  text:
+                      "Posts"), // Merged tab for Pending, Accepted, and Rejected
+              Tab(
+                  text:
+                      "Account Verification"), // New tab for account verification
             ],
           ),
         ),
@@ -38,11 +40,10 @@ class AdminHome extends StatelessWidget {
           children: [
             TabBarView(
               children: [
-                PendingPosts(
-                    username: username), // Pass the username dynamically
-                AcceptedPosts(
-                    username: username), // Pass the username dynamically
-                RejectedPost(username: username),
+                Post(
+                    username:
+                        username), // New widget that handles merged post view
+                AccountVerification(username: username),
               ],
             ),
             Positioned(
@@ -51,8 +52,7 @@ class AdminHome extends StatelessWidget {
               child: FloatingActionButton(
                 backgroundColor: Colors.grey,
                 onPressed: () {
-                  // Handle logout logic here
-                  html.window.location.reload();
+                  html.window.location.reload(); // Handle logout logic
                 },
                 child: const Icon(Icons.logout),
               ),
