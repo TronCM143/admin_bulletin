@@ -20,8 +20,13 @@ class _AccountVerificationState extends State<AccountVerification> {
   }
 
   Future<void> _fetchUsers() async {
+    bool isDean = widget.username.endsWith('_DEAN');
+    String department = isDean ? widget.username.split('_')[0] : '';
+
+    // Fetch users based on role
     _usersFuture = FirebaseFirestore.instance
-        .collection('trialUsers')
+        .collection('Users')
+        .where('department', isEqualTo: isDean ? department : null)
         .get()
         .then((snapshot) => snapshot.docs);
     setState(() {}); // Triggers UI rebuild after fetching data
@@ -30,7 +35,7 @@ class _AccountVerificationState extends State<AccountVerification> {
   Future<void> updateApprovalStatus(String uid, String newStatus) async {
     try {
       await FirebaseFirestore.instance
-          .collection('trialUsers')
+          .collection('Users')
           .doc(uid)
           .update({'approvalStatus': newStatus});
       _fetchUsers(); // Refresh user data after updating
@@ -41,6 +46,9 @@ class _AccountVerificationState extends State<AccountVerification> {
 
   @override
   Widget build(BuildContext context) {
+    bool isDean = widget.username.endsWith('_DEAN');
+    String department = isDean ? widget.username.split('_')[0] : '';
+
     return FutureBuilder<List<QueryDocumentSnapshot>>(
       future: _usersFuture,
       builder: (context, snapshot) {
@@ -60,66 +68,97 @@ class _AccountVerificationState extends State<AccountVerification> {
 
         return Padding(
           padding: const EdgeInsets.all(8.0),
-          child: DataTable(
-            columns: const [
-              DataColumn(label: Text('UID')),
-              DataColumn(label: Text('Name')),
-              DataColumn(label: Text('Email')),
-              DataColumn(label: Text('Department')),
-              DataColumn(label: Text('Approval Status')),
-            ],
-            rows: users.map((user) {
-              String uid = user.id;
-
-              // Check UID type: creator starts with 'c', student is numeric
-              bool isCreator = uid.startsWith('c');
-              String userName = isCreator
-                  ? user['clubName'] ?? 'N/A'
-                  : '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}';
-              String userEmail = user['email'] ?? 'N/A';
-              String userDepartment = user['department'] ?? 'N/A';
-              String approvalStatus =
-                  isCreator ? (user['approvalStatus'] ?? 'pending') : 'N/A';
-
-              // Define status color (only for creators)
-              Color statusColor = Colors.orange; // Default to pending
-              if (approvalStatus == 'accepted') statusColor = Colors.green;
-              if (approvalStatus == 'rejected') statusColor = Colors.red;
-
-              return DataRow(
-                cells: [
-                  DataCell(Text(uid)),
-                  DataCell(Text(userName)),
-                  DataCell(Text(userEmail)),
-                  DataCell(Text(userDepartment)),
-                  DataCell(
-                    isCreator
-                        ? approvalStatus == 'pending'
-                            ? Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.check,
-                                        color: Colors.green),
-                                    onPressed: () =>
-                                        updateApprovalStatus(uid, 'accepted'),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.close,
-                                        color: Colors.red),
-                                    onPressed: () =>
-                                        updateApprovalStatus(uid, 'rejected'),
-                                  ),
-                                ],
-                              )
-                            : Text(
-                                approvalStatus,
-                                style: TextStyle(color: statusColor),
-                              )
-                        : const Text('N/A'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start, // Align to top
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8.0),
+                child: Text(
+                  'Account Verification',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              );
-            }).toList(),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    columns: const [
+                      DataColumn(label: Text('UID')),
+                      DataColumn(label: Text('Name')),
+                      DataColumn(label: Text('Email')),
+                      DataColumn(label: Text('Department')),
+                      DataColumn(label: Text('Approval Status')),
+                    ],
+                    rows: users.map((user) {
+                      String uid = user.id;
+
+                      // Check UID type: creator starts with 'c', student is numeric
+                      bool isCreator = uid.startsWith('c');
+                      String userName = isCreator
+                          ? user['clubName'] ?? 'N/A'
+                          : '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}';
+                      String userEmail = user['email'] ?? 'N/A';
+                      String userDepartment = user['department'] ?? 'N/A';
+                      String approvalStatus = isCreator
+                          ? (user['approvalStatus'] ?? 'pending')
+                          : 'N/A';
+
+                      // Define status color (only for creators)
+                      Color statusColor = Colors.orange; // Default to pending
+                      if (approvalStatus == 'accepted')
+                        statusColor = Colors.green;
+                      if (approvalStatus == 'rejected')
+                        statusColor = Colors.red;
+
+                      return DataRow(
+                        cells: [
+                          DataCell(Text(uid)),
+                          DataCell(Text(userName)),
+                          DataCell(Text(userEmail)),
+                          DataCell(Text(userDepartment)),
+                          DataCell(
+                            isCreator
+                                ? isDean && userDepartment == department
+                                    ? approvalStatus == 'pending'
+                                        ? Row(
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(Icons.check,
+                                                    color: Colors.green),
+                                                onPressed: () =>
+                                                    updateApprovalStatus(
+                                                        uid, 'accepted'),
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(Icons.close,
+                                                    color: Colors.red),
+                                                onPressed: () =>
+                                                    updateApprovalStatus(
+                                                        uid, 'rejected'),
+                                              ),
+                                            ],
+                                          )
+                                        : Text(
+                                            approvalStatus,
+                                            style:
+                                                TextStyle(color: statusColor),
+                                          )
+                                    : Text(
+                                        approvalStatus,
+                                        style: TextStyle(color: statusColor),
+                                      )
+                                : const Text('N/A'),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
