@@ -8,6 +8,9 @@ class Post extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PostManager(username: username);
+    return Container(
+      color: Colors.transparent, // Set background to transparent
+      child: PostManager(username: username),
+    );
   }
 }

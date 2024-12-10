@@ -38,7 +38,7 @@ class _AdminHomeState extends State<AdminHome> {
         backgroundColor: Colors.green.shade600,
         elevation: 0,
         title: const Text(
-          'Admin Dashboard',
+          'AppDate',
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
@@ -51,7 +51,7 @@ class _AdminHomeState extends State<AdminHome> {
               opacity: 0.1, // Adjust transparency (0.0 to 1.0)
               child: Image.asset(
                 'assets/logo_ndmu.png',
-                fit: BoxFit.cover,
+                alignment: Alignment.center, // Centers the image
               ),
             ),
           ),

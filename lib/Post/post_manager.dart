@@ -82,22 +82,31 @@ class _PostManagerState extends State<PostManager> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: allPosts.isEmpty
-                      ? const Center(child: Text('No posts available'))
-                      : PostTable(
-                          allPosts: allPosts,
-                          postStatusMap: postStatusMap,
-                          onUpdateStatus: _updatePostStatus,
-                        ),
-                ),
-              ],
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(
+                'assets/logo.ndmu.png'), // Ensure this path is correct
+            alignment: Alignment.center, // Optional, to fill the screen
+          ),
+        ),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: allPosts.isEmpty
+                        ? const Center(child: Text('No posts available'))
+                        : PostTable(
+                            allPosts: allPosts,
+                            postStatusMap: postStatusMap,
+                            onUpdateStatus: _updatePostStatus,
+                          ),
+                  ),
+                ],
+              ),
+      ),
     );
   }
 }
