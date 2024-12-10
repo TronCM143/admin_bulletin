@@ -87,7 +87,7 @@ class _PostManagerState extends State<PostManager> {
           image: DecorationImage(
             image: AssetImage(
                 'assets/logo.ndmu.png'), // Ensure this path is correct
-            alignment: Alignment.center, // Optional, to fill the screen
+            fit: BoxFit.cover, // Adjust the image fit
           ),
         ),
         child: isLoading

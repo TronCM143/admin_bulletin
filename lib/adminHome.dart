@@ -1,7 +1,8 @@
+import 'package:bulletin_admin/Admin_account/account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'Post/mainPost.dart'; // A new widget to display all posts with labels
-import 'package:bulletin_admin/Account/account_verity.dart';
+import 'package:bulletin_admin/Account_verification/account_verity.dart';
 import 'dart:html' as html;
 
 class AdminHome extends StatefulWidget {
@@ -25,9 +26,7 @@ class _AdminHomeState extends State<AdminHome> {
     _pages.addAll([
       Post(username: widget.username),
       AccountVerification(username: widget.username),
-      Center(child: Text("About Page")), // Placeholder for About
-      Center(child: Text("Settings Page")), // Placeholder for Settings
-      Center(child: Text("Account Page")), // Placeholder for Account
+      AccountPage(username: widget.username)
     ]);
   }
 
@@ -72,9 +71,7 @@ class _AdminHomeState extends State<AdminHome> {
                     _buildNavText("Account Verification", 1),
                     const Spacer(), // Space between the main options and bottom options
                     // Settings, About, and Account moved to the bottom
-                    _buildNavText("About", 2),
-                    _buildNavText("Settings", 3),
-                    _buildNavText("Account", 4),
+                    _buildNavText("Account", 2),
                     // Logout button with traditional style
                     TextButton(
                       onPressed: () {
