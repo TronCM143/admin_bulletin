@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http; // Import the http package
 
 class AccountVerification extends StatefulWidget {
   final String username;
@@ -19,28 +21,104 @@ class _AccountVerificationState extends State<AccountVerification> {
     _fetchUsers(); // Initial fetch
   }
 
+  Future<void> sendEmailConfirmation(
+      String email, String clubID, String clubName) async {
+    const String serviceId = 'service_znustkk';
+    const String templateId = 'template_9db3awh';
+    const String userId = '8FjUfae60Qdd0PMxc';
+
+    final url = Uri.parse('https://api.emailjs.com/api/v1.0/email/send');
+    final payload = {
+      'service_id': serviceId,
+      'template_id': templateId,
+      'user_id': userId,
+      'template_params': {
+        'email': email,
+        'clubID': clubID,
+        'clubName': clubName,
+      },
+    };
+
+    debugPrint('Preparing to send email...');
+    debugPrint('Payload: $payload');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(payload),
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint('Email sent successfully!');
+      } else {
+        debugPrint(
+            'Failed to send email. Status code: ${response.statusCode}. Response body: ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('Error sending email: $e');
+    }
+  }
+
   Future<void> _fetchUsers() async {
+    debugPrint('Fetching users for verification...');
     bool isDean = widget.username.endsWith('_DEAN');
     String department = isDean ? widget.username.split('_')[0] : '';
 
-    // Fetch users based on role
-    _usersFuture = FirebaseFirestore.instance
-        .collection('Users')
-        .where('department', isEqualTo: isDean ? department : null)
-        .get()
-        .then((snapshot) => snapshot.docs);
-    setState(() {}); // Triggers UI rebuild after fetching data
+    try {
+      _usersFuture = FirebaseFirestore.instance
+          .collection('Users')
+          .where('department', isEqualTo: isDean ? department : null)
+          .get()
+          .then((snapshot) {
+        debugPrint(
+            'Fetched ${snapshot.docs.length} users for department: $department');
+        return snapshot.docs;
+      });
+      setState(() {});
+    } catch (e) {
+      debugPrint('Error fetching users: $e');
+    }
   }
 
   Future<void> updateApprovalStatus(String uid, String newStatus) async {
     try {
+      debugPrint('Updating approval status for UID: $uid to $newStatus');
       await FirebaseFirestore.instance
           .collection('Users')
           .doc(uid)
           .update({'approvalStatus': newStatus});
+      debugPrint('Approval status updated successfully for UID: $uid');
+
+      // Fetch user details for email notification
+      var userDoc =
+          await FirebaseFirestore.instance.collection('Users').doc(uid).get();
+
+      if (userDoc.exists) {
+        debugPrint('Fetched user details for UID: $uid');
+        String userEmail = userDoc['email'] ?? '';
+        String clubID = userDoc['clubID'] ?? 'N/A';
+        String clubName = userDoc['clubName'] ?? 'N/A';
+
+        // Send email if account is accepted
+        if (newStatus == 'accepted') {
+          try {
+            debugPrint(
+                'Sending email confirmation to $userEmail with clubID: $clubID and clubName: $clubName');
+            await sendEmailConfirmation(userEmail, clubID, clubName);
+            debugPrint('Email confirmation sent successfully for UID: $uid');
+          } catch (e) {
+            debugPrint(
+                'Error occurred while sending email for UID: $uid. Error: $e');
+          }
+        }
+      } else {
+        debugPrint('User document does not exist for UID: $uid');
+      }
+
       _fetchUsers(); // Refresh user data after updating
     } catch (e) {
-      debugPrint('Error updating approval status: $e');
+      debugPrint('Error updating approval status for UID: $uid. Error: $e');
     }
   }
 

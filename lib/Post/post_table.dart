@@ -20,7 +20,7 @@ class PostTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start, // Align to the top-left
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
           padding: EdgeInsets.only(bottom: 8.0),
@@ -33,16 +33,13 @@ class PostTable extends StatelessWidget {
           child: SingleChildScrollView(
             scrollDirection: Axis.vertical,
             child: DataTable(
-              headingRowColor: MaterialStateProperty.all(
-                  Colors.transparent), // Transparent header background
+              headingRowColor: MaterialStateProperty.all(Colors.transparent),
               dataRowColor: MaterialStateProperty.resolveWith<Color?>(
                 (Set<MaterialState> states) {
-                  // Transparent data row background
                   if (states.contains(MaterialState.selected)) {
-                    return Colors.grey
-                        .withOpacity(0.2); // Slight tint on selection
+                    return Colors.grey.withOpacity(0.2);
                   }
-                  return Colors.transparent; // Default transparent background
+                  return Colors.transparent;
                 },
               ),
               columns: const [
@@ -56,9 +53,6 @@ class PostTable extends StatelessWidget {
                 final postData = post.data() as Map<String, dynamic>;
                 final postId = post.id;
                 final content = postData['content'] ?? 'No content available';
-                final truncatedContent = content.length > 30
-                    ? '${content.substring(0, 30)}...'
-                    : content;
                 final imageUrls = postData['imageUrls'] ?? [];
                 final timestamp = postData['timestamp'] as Timestamp;
                 final postTime = timestamp.toDate();
@@ -72,27 +66,40 @@ class PostTable extends StatelessWidget {
                 return DataRow(cells: [
                   DataCell(Text(formattedTime)),
                   DataCell(Text(postData['clubName'] ?? 'Unknown')),
-                  DataCell(Text(truncatedContent)),
                   DataCell(
-                    Wrap(
-                      spacing: 8.0,
-                      children: imageUrls.map<Widget>((imageUrl) {
-                        return GestureDetector(
-                          onTap: () {
-                            showImagePreview(context, imageUrl);
-                          },
-                          child: CachedNetworkImage(
-                            imageUrl: imageUrl,
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) =>
-                                const CircularProgressIndicator(),
-                            errorWidget: (context, url, error) =>
-                                const Icon(Icons.error),
-                          ),
-                        );
-                      }).toList(),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 200),
+                      child: Text(
+                        content,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 200),
+                      child: Wrap(
+                        spacing: 8.0,
+                        runSpacing: 8.0,
+                        children: imageUrls.map<Widget>((imageUrl) {
+                          return GestureDetector(
+                            onTap: () {
+                              showImagePreview(context, imageUrl);
+                            },
+                            child: CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) =>
+                                  const CircularProgressIndicator(),
+                              errorWidget: (context, url, error) =>
+                                  const Icon(Icons.error),
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     ),
                   ),
                   DataCell(
