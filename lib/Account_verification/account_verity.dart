@@ -22,7 +22,7 @@ class _AccountVerificationState extends State<AccountVerification> {
   }
 
   Future<void> sendEmailConfirmation(
-      String email, String clubID, String clubName) async {
+      String email, String clubID, String clubName, String password) async {
     const String serviceId = 'service_znustkk';
     const String templateId = 'template_9db3awh';
     const String userId = '8FjUfae60Qdd0PMxc';
@@ -36,6 +36,7 @@ class _AccountVerificationState extends State<AccountVerification> {
         'email': email,
         'clubID': clubID,
         'clubName': clubName,
+        'password': password,
       },
     };
 
@@ -99,13 +100,14 @@ class _AccountVerificationState extends State<AccountVerification> {
         String userEmail = userDoc['email'] ?? '';
         String clubID = userDoc['clubID'] ?? 'N/A';
         String clubName = userDoc['clubName'] ?? 'N/A';
+        String password = userDoc['password'] ?? 'N/A';
 
         // Send email if account is accepted
         if (newStatus == 'accepted') {
           try {
             debugPrint(
                 'Sending email confirmation to $userEmail with clubID: $clubID and clubName: $clubName');
-            await sendEmailConfirmation(userEmail, clubID, clubName);
+            await sendEmailConfirmation(userEmail, clubID, clubName, password);
             debugPrint('Email confirmation sent successfully for UID: $uid');
           } catch (e) {
             debugPrint(

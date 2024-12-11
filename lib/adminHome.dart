@@ -1,7 +1,7 @@
 import 'package:bulletin_admin/Admin_account/account.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'Post/mainPost.dart'; // A new widget to display all posts with labels
+import 'Posts/post.dart';
 import 'package:bulletin_admin/Account_verification/account_verity.dart';
 import 'dart:html' as html;
 
@@ -24,7 +24,7 @@ class _AdminHomeState extends State<AdminHome> {
   void initState() {
     super.initState();
     _pages.addAll([
-      Post(username: widget.username),
+      Posts(username: widget.username),
       AccountVerification(username: widget.username),
       AccountPage(username: widget.username)
     ]);
