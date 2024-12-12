@@ -1,9 +1,11 @@
-import 'package:bulletin_admin/Admin_account/account.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
-import 'Posts/post.dart';
-import 'package:bulletin_admin/Account_verification/account_verity.dart';
 import 'dart:html' as html;
+import 'Posts/post.dart';
+import 'Account_verification/account_verity.dart';
+import 'Admin_account/account.dart';
+import 'Students/student_table.dart';
 
 class AdminHome extends StatefulWidget {
   final String username;
@@ -26,7 +28,8 @@ class _AdminHomeState extends State<AdminHome> {
     _pages.addAll([
       Posts(username: widget.username),
       AccountVerification(username: widget.username),
-      AccountPage(username: widget.username)
+      AccountPage(username: widget.username),
+      StudentsPage(username: widget.username),
     ]);
   }
 
@@ -36,9 +39,35 @@ class _AdminHomeState extends State<AdminHome> {
       appBar: AppBar(
         backgroundColor: Colors.green.shade600,
         elevation: 0,
-        title: const Text(
-          'AppDate',
-          style: TextStyle(color: Colors.white),
+        title: FutureBuilder<DocumentSnapshot>(
+          future: FirebaseFirestore.instance
+              .collection('admin') // Admin collection
+              .doc(widget.username) // Admin document using username as UID
+              .get(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            }
+
+            if (snapshot.hasError) {
+              return const Text("Error loading admin data");
+            }
+
+            if (snapshot.hasData && snapshot.data != null) {
+              var adminData = snapshot.data!.data() as Map<String, dynamic>;
+              String adminName = adminData['name'] ??
+                  'Admin'; // Default to 'Admin' if not found
+              return Text(
+                'AppDate - $adminName',
+                style: const TextStyle(color: Colors.white),
+              );
+            } else {
+              return const Text(
+                'AppDate',
+                style: TextStyle(color: Colors.white),
+              );
+            }
+          },
         ),
         centerTitle: true,
       ),
@@ -67,11 +96,13 @@ class _AdminHomeState extends State<AdminHome> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Traditional clickable text items for navigation
-                    _buildNavText("Posts", 0),
-                    _buildNavText("Account Verification", 1),
+                    _buildNavButton("Posts", 0),
+                    _buildNavButton("Creators", 1),
+                    _buildNavButton(
+                        "Students", 3), // "Students" button for StudentsPage
                     const Spacer(), // Space between the main options and bottom options
                     // Settings, About, and Account moved to the bottom
-                    _buildNavText("Account", 2),
+                    _buildNavButton("Account", 2),
                     // Logout button with traditional style
                     TextButton(
                       onPressed: () {
@@ -104,17 +135,29 @@ class _AdminHomeState extends State<AdminHome> {
     );
   }
 
-  // Custom method to build traditional text navigation items
-  Widget _buildNavText(String label, int index) {
+  // Custom method to build navigation buttons with borders and rounded corners
+  Widget _buildNavButton(String label, int index) {
     return GestureDetector(
       onTap: () => setState(() => _selectedIndex = index),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        decoration: BoxDecoration(
+          color: _selectedIndex == index
+              ? Colors.green.shade600
+              : Colors.transparent,
+          border: Border.all(
+            color: _selectedIndex == index
+                ? Colors.green.shade600
+                : Colors.grey.shade400,
+            width: 1.5, // Ensure this value is consistent for all buttons
+          ),
+          borderRadius: BorderRadius.circular(12), // Consistent border radius
+        ),
         child: Text(
           label,
           style: TextStyle(
-            color:
-                _selectedIndex == index ? Colors.green.shade600 : Colors.black,
+            color: _selectedIndex == index ? Colors.white : Colors.black,
             fontSize: 16,
             fontWeight: FontWeight.w500,
           ),

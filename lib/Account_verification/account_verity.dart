@@ -40,9 +40,6 @@ class _AccountVerificationState extends State<AccountVerification> {
       },
     };
 
-    debugPrint('Preparing to send email...');
-    debugPrint('Payload: $payload');
-
     try {
       final response = await http.post(
         url,
@@ -62,7 +59,6 @@ class _AccountVerificationState extends State<AccountVerification> {
   }
 
   Future<void> _fetchUsers() async {
-    debugPrint('Fetching users for verification...');
     bool isDean = widget.username.endsWith('_DEAN');
     String department = isDean ? widget.username.split('_')[0] : '';
 
@@ -71,11 +67,7 @@ class _AccountVerificationState extends State<AccountVerification> {
           .collection('Users')
           .where('department', isEqualTo: isDean ? department : null)
           .get()
-          .then((snapshot) {
-        debugPrint(
-            'Fetched ${snapshot.docs.length} users for department: $department');
-        return snapshot.docs;
-      });
+          .then((snapshot) => snapshot.docs);
       setState(() {});
     } catch (e) {
       debugPrint('Error fetching users: $e');
@@ -84,43 +76,43 @@ class _AccountVerificationState extends State<AccountVerification> {
 
   Future<void> updateApprovalStatus(String uid, String newStatus) async {
     try {
-      debugPrint('Updating approval status for UID: $uid to $newStatus');
-      await FirebaseFirestore.instance
-          .collection('Users')
-          .doc(uid)
-          .update({'approvalStatus': newStatus});
-      debugPrint('Approval status updated successfully for UID: $uid');
-
-      // Fetch user details for email notification
+      // Fetch the user's document
       var userDoc =
           await FirebaseFirestore.instance.collection('Users').doc(uid).get();
 
       if (userDoc.exists) {
-        debugPrint('Fetched user details for UID: $uid');
+        String userDepartment = userDoc['department'] ?? 'N/A';
+
+        // Allow only DSA admin to approve/reject "Non Academic" creators
+        if (userDepartment == "Non Academic" && widget.username != "DSA") {
+          debugPrint(
+              'Only the DSA admin can approve/reject creators from the "Non Academic" department.');
+          return;
+        }
+
+        // Proceed with updating the approval status
+        await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(uid)
+            .update({'approvalStatus': newStatus});
+
         String userEmail = userDoc['email'] ?? '';
         String clubID = userDoc['clubID'] ?? 'N/A';
         String clubName = userDoc['clubName'] ?? 'N/A';
         String password = userDoc['password'] ?? 'N/A';
 
-        // Send email if account is accepted
         if (newStatus == 'accepted') {
           try {
-            debugPrint(
-                'Sending email confirmation to $userEmail with clubID: $clubID and clubName: $clubName');
             await sendEmailConfirmation(userEmail, clubID, clubName, password);
-            debugPrint('Email confirmation sent successfully for UID: $uid');
           } catch (e) {
-            debugPrint(
-                'Error occurred while sending email for UID: $uid. Error: $e');
+            debugPrint('Error occurred while sending email: $e');
           }
         }
-      } else {
-        debugPrint('User document does not exist for UID: $uid');
-      }
 
-      _fetchUsers(); // Refresh user data after updating
+        _fetchUsers(); // Refresh user data after updating
+      }
     } catch (e) {
-      debugPrint('Error updating approval status for UID: $uid. Error: $e');
+      debugPrint('Error updating approval status: $e');
     }
   }
 
@@ -129,79 +121,96 @@ class _AccountVerificationState extends State<AccountVerification> {
     bool isDean = widget.username.endsWith('_DEAN');
     String department = isDean ? widget.username.split('_')[0] : '';
 
-    return FutureBuilder<List<QueryDocumentSnapshot>>(
-      future: _usersFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    return Scaffold(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SizedBox(
+            width: constraints.maxWidth,
+            height: constraints.maxHeight,
+            child: FutureBuilder<List<QueryDocumentSnapshot>>(
+              future: _usersFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-        if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
 
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No users to verify.'));
-        }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No users to verify.'));
+                }
 
-        var users = snapshot.data!;
+                var users = snapshot.data!;
 
-        return Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start, // Align to top
-            children: [
-              const Padding(
-                padding: EdgeInsets.only(bottom: 8.0),
-                child: Text(
-                  'Account Verification',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    columns: const [
-                      DataColumn(label: Text('UID')),
-                      DataColumn(label: Text('Name')),
-                      DataColumn(label: Text('Email')),
-                      DataColumn(label: Text('Department')),
-                      DataColumn(label: Text('Approval Status')),
-                    ],
-                    rows: users.map((user) {
-                      String uid = user.id;
+                // Filter to include only creators (UID starts with 'c')
+                var creators =
+                    users.where((user) => user.id.startsWith('c')).toList();
 
-                      // Check UID type: creator starts with 'c', student is numeric
-                      bool isCreator = uid.startsWith('c');
-                      String userName = isCreator
-                          ? user['clubName'] ?? 'N/A'
-                          : '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}';
-                      String userEmail = user['email'] ?? 'N/A';
-                      String userDepartment = user['department'] ?? 'N/A';
-                      String approvalStatus = isCreator
-                          ? (user['approvalStatus'] ?? 'pending')
-                          : 'N/A';
+                // Sort creators based on approvalStatus: pending > accepted > rejected
+                creators.sort((a, b) {
+                  String statusA = a['approvalStatus'] ?? 'pending';
+                  String statusB = b['approvalStatus'] ?? 'pending';
+                  int statusOrder(String status) {
+                    switch (status) {
+                      case 'pending':
+                        return 0;
+                      case 'accepted':
+                        return 1;
+                      case 'rejected':
+                        return 2;
+                      default:
+                        return 3;
+                    }
+                  }
 
-                      // Define status color (only for creators)
-                      Color statusColor = Colors.orange; // Default to pending
-                      if (approvalStatus == 'accepted')
-                        statusColor = Colors.green;
-                      if (approvalStatus == 'rejected')
-                        statusColor = Colors.red;
+                  return statusOrder(statusA).compareTo(statusOrder(statusB));
+                });
 
-                      return DataRow(
-                        cells: [
-                          DataCell(Text(uid)),
-                          DataCell(Text(userName)),
-                          DataCell(Text(userEmail)),
-                          DataCell(Text(userDepartment)),
-                          DataCell(
-                            isCreator
-                                ? isDean && userDepartment == department
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: constraints.maxWidth,
+                        maxHeight: constraints.maxHeight,
+                      ),
+                      child: DataTable(
+                        columnSpacing: 20,
+                        headingRowHeight: 40,
+                        dataRowHeight: 56,
+                        columns: const [
+                          DataColumn(label: Text('UID')),
+                          DataColumn(label: Text('Name')),
+                          DataColumn(label: Text('Email')),
+                          DataColumn(label: Text('Department')),
+                          DataColumn(label: Text('Approval Status')),
+                        ],
+                        rows: creators.map((user) {
+                          String uid = user.id;
+                          String userName = user['clubName'] ?? 'N/A';
+                          String userEmail = user['email'] ?? 'N/A';
+                          String userDepartment = user['department'] ?? 'N/A';
+                          String approvalStatus =
+                              user['approvalStatus'] ?? 'pending';
+
+                          Color statusColor = Colors.orange;
+                          if (approvalStatus == 'accepted')
+                            statusColor = Colors.green;
+                          if (approvalStatus == 'rejected')
+                            statusColor = Colors.red;
+
+                          return DataRow(
+                            cells: [
+                              DataCell(Text(uid)),
+                              DataCell(Text(userName)),
+                              DataCell(Text(userEmail)),
+                              DataCell(Text(userDepartment)),
+                              DataCell(
+                                isDean && userDepartment == department ||
+                                        (userDepartment == "Non Academic" &&
+                                            widget.username == "DSA")
                                     ? approvalStatus == 'pending'
                                         ? Row(
                                             children: [
@@ -229,19 +238,20 @@ class _AccountVerificationState extends State<AccountVerification> {
                                     : Text(
                                         approvalStatus,
                                         style: TextStyle(color: statusColor),
-                                      )
-                                : const Text('N/A'),
-                          ),
-                        ],
-                      );
-                    }).toList(),
+                                      ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }

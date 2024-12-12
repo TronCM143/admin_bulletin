@@ -1,6 +1,7 @@
 import 'package:bulletin_admin/loginpage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'dart:html'; // Import dart:html for document manipulation
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +13,10 @@ void main() async {
       projectId: "bulletin-8e636",
     ),
   );
+
+  // Set the document title
+  document.title = "AppDate Admin Dashboard"; // Correct usage
+
   runApp(const MainApp());
 }
 
@@ -21,8 +26,9 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
-        body: LoginPage(), // Call the AllPostsPage here
+        body: LoginPage(), // Call the LoginPage here
       ),
     );
   }

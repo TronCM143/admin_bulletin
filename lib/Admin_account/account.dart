@@ -11,13 +11,11 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
-  bool _isPasswordVisible = false; // Controls password visibility
-  bool _isNewPasswordVisible = false; // Controls new password visibility
-  String _password = ''; // Stores the fetched password
-  String _newPassword = ''; // Stores the new password input
-// To control the password TextField
-  final _newPasswordController =
-      TextEditingController(); // To control the new password TextField
+  bool _isPasswordVisible = false;
+  bool _isNewPasswordVisible = false;
+  String? _password; // Stores the fetched password
+  final TextEditingController _newPasswordController =
+      TextEditingController(); // Controller for new password
 
   @override
   void initState() {
@@ -28,7 +26,6 @@ class _AccountPageState extends State<AccountPage> {
   // Fetch password from Firebase
   Future<void> _fetchPasswordFromFirebase() async {
     try {
-      // Assuming you have a 'users' collection and each user document is named by their username
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('admin')
           .doc(widget.username)
@@ -36,8 +33,7 @@ class _AccountPageState extends State<AccountPage> {
 
       if (userDoc.exists) {
         setState(() {
-          _password = userDoc[
-              'password']; // Assuming the password is stored as a plain text string
+          _password = userDoc['password'];
         });
       } else {
         print('User not found');
@@ -49,7 +45,7 @@ class _AccountPageState extends State<AccountPage> {
 
   // Update password in Firebase
   Future<void> _updatePasswordInFirebase() async {
-    if (_newPassword.isEmpty) {
+    if (_newPasswordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a new password')),
       );
@@ -57,11 +53,10 @@ class _AccountPageState extends State<AccountPage> {
     }
 
     try {
-      // Update the password in Firebase
       await FirebaseFirestore.instance
           .collection('admin')
           .doc(widget.username)
-          .update({'password': _newPassword});
+          .update({'password': _newPasswordController.text});
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Password updated successfully')),
@@ -77,68 +72,93 @@ class _AccountPageState extends State<AccountPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Username: ${widget.username}',
-                style: TextStyle(fontSize: 20)),
-            SizedBox(height: 20),
-
-            Text('Admin ID: ${widget.username}',
-                style: TextStyle(fontSize: 20)),
-            SizedBox(height: 20),
-            // Current Password Field with toggle visibility
-            Text('Current Password:', style: TextStyle(fontSize: 18)),
-            SizedBox(height: 8),
-            TextField(
-              controller: TextEditingController(text: _password),
-              obscureText: !_isPasswordVisible, // Toggle visibility
-              readOnly: true, // Make it non-editable
-              decoration: InputDecoration(
-                hintText: '••••••••',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isPasswordVisible
-                        ? Icons.visibility
-                        : Icons.visibility_off,
-                    color: Colors.green,
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(
+                'assets/logo_ndmu.png'), // Replace with your image path
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Admin ID: ${widget.username}',
+                style: const TextStyle(fontSize: 20, color: Colors.white),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Current Password:',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: TextEditingController(text: _password),
+                obscureText: !_isPasswordVisible,
+                readOnly: true,
+                decoration: InputDecoration(
+                  hintText: '••••••••',
+                  hintStyle: TextStyle(color: Colors.white54),
+                  filled: true,
+                  fillColor: Colors.black.withOpacity(0.5),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: Colors.green,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _isPasswordVisible = !_isPasswordVisible;
-                    });
-                  },
                 ),
               ),
-            ),
-            SizedBox(height: 20),
-
-            // New Password Field with toggle visibility
-            Text('New Password:', style: TextStyle(fontSize: 18)),
-            SizedBox(height: 8),
-            TextField(
-              controller: _newPasswordController,
-              obscureText:
-                  _isNewPasswordVisible, // Toggle visibility for new password
-              onChanged: (value) {
-                setState(() {
-                  _newPassword = value;
-                });
-              },
-              decoration: InputDecoration(
-                hintText: 'Enter your new password',
+              const SizedBox(height: 20),
+              const Text(
+                'New Password:',
+                style: TextStyle(fontSize: 18, color: Colors.white),
               ),
-            ),
-            SizedBox(height: 20),
-
-            // Change Password Button
-            ElevatedButton(
-              onPressed: _updatePasswordInFirebase,
-              child: const Text('Change Password'),
-            ),
-          ],
+              const SizedBox(height: 8),
+              TextField(
+                controller: _newPasswordController,
+                obscureText: !_isNewPasswordVisible,
+                decoration: InputDecoration(
+                  hintText: 'Enter your new password',
+                  hintStyle: TextStyle(color: Colors.white54),
+                  filled: true,
+                  fillColor: Colors.black.withOpacity(0.5),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isNewPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: Colors.green,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isNewPasswordVisible = !_isNewPasswordVisible;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _updatePasswordInFirebase,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent.withOpacity(0.8),
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Change Password'),
+              ),
+            ],
+          ),
         ),
       ),
     );

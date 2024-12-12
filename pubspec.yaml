@@ -24,6 +24,7 @@ dependencies:
   cached_network_image: ^3.4.1
   firebase_auth: ^5.3.3
   http: ^1.2.2
+  html: ^0.15.5 
 
 dev_dependencies:
   flutter_test:
@@ -35,4 +36,5 @@ flutter:
   assets:
     - assets/
     - assets/logo_ndmu.png
+
 
