@@ -16,7 +16,8 @@ class Event {
 }
 
 class CalendarPage {
-  static Future<void> showEventDialog(BuildContext context) async {
+  static Future<void> showEventDialog(
+      BuildContext context, String adminName) async {
     final TextEditingController _titleController = TextEditingController();
     final TextEditingController _descriptionController =
         TextEditingController();
@@ -119,6 +120,7 @@ class CalendarPage {
                     'description': _descriptionController.text,
                     'startDate': _startDate,
                     'endDate': _endDate,
+                    'from': adminName,
                   });
 
                   Navigator.of(context).pop();
