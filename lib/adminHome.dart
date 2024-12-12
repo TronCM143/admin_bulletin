@@ -6,6 +6,7 @@ import 'Posts/post.dart';
 import 'Account_verification/account_verity.dart';
 import 'Admin_account/account.dart';
 import 'Students/student_table.dart';
+import 'calendar.dart';
 
 class AdminHome extends StatefulWidget {
   final String username;
@@ -131,6 +132,13 @@ class _AdminHomeState extends State<AdminHome> {
             ],
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          CalendarPage.showEventDialog(context);
+        },
+        backgroundColor: Colors.green.shade600,
+        child: const Icon(Icons.calendar_month_rounded),
       ),
     );
   }
