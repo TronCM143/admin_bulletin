@@ -18,20 +18,41 @@ class AdminHome extends StatefulWidget {
 }
 
 class _AdminHomeState extends State<AdminHome> {
-  int _selectedIndex = 0; // Tracks the selected panel option
-
-  // Widgets for each page
+  int _selectedIndex = 0;
   final List<Widget> _pages = [];
+  bool isDSA = false; // Flag to check if the user is 'DSA'
 
   @override
   void initState() {
     super.initState();
-    _pages.addAll([
-      Posts(username: widget.username),
-      AccountVerification(username: widget.username),
-      AccountPage(username: widget.username),
-      StudentsPage(username: widget.username),
-    ]);
+    _initializePages();
+  }
+
+  Future<void> _initializePages() async {
+    // Fetch the user's role from Firestore
+    DocumentSnapshot adminSnapshot = await FirebaseFirestore.instance
+        .collection('admin')
+        .doc(widget.username)
+        .get();
+
+    if (adminSnapshot.exists) {
+      var adminData = adminSnapshot.data() as Map<String, dynamic>;
+      String userRole = adminData['name'] ?? '';
+
+      setState(() {
+        isDSA = userRole == 'DSA'; // Check if the role is 'DSA'
+
+        // Add pages based on user role
+        _pages.addAll([
+          Posts(username: widget.username),
+          // Only add AccountVerification if the user is DSA
+          if (isDSA) AccountVerification(username: widget.username),
+          AccountPage(username: widget.username),
+          // Only add StudentsPage if the user is DSA
+          if (isDSA) StudentsPage(username: widget.username),
+        ]);
+      });
+    }
   }
 
   @override
@@ -42,8 +63,8 @@ class _AdminHomeState extends State<AdminHome> {
         elevation: 0,
         title: FutureBuilder<DocumentSnapshot>(
           future: FirebaseFirestore.instance
-              .collection('admin') // Admin collection
-              .doc(widget.username) // Admin document using username as UID
+              .collection('admin')
+              .doc(widget.username)
               .get(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -56,8 +77,7 @@ class _AdminHomeState extends State<AdminHome> {
 
             if (snapshot.hasData && snapshot.data != null) {
               var adminData = snapshot.data!.data() as Map<String, dynamic>;
-              String adminName = adminData['name'] ??
-                  'Admin'; // Default to 'Admin' if not found
+              String adminName = adminData['name'] ?? 'Admin';
               return Text(
                 'AppDate - $adminName',
                 style: const TextStyle(color: Colors.white),
@@ -77,10 +97,10 @@ class _AdminHomeState extends State<AdminHome> {
           // Background Image with transparency
           Positioned.fill(
             child: Opacity(
-              opacity: 0.1, // Adjust transparency (0.0 to 1.0)
+              opacity: 0.1,
               child: Image.asset(
                 'assets/logo_ndmu.png',
-                alignment: Alignment.center, // Centers the image
+                alignment: Alignment.center,
               ),
             ),
           ),
@@ -89,22 +109,21 @@ class _AdminHomeState extends State<AdminHome> {
             children: [
               // Left-side navigation panel
               Container(
-                width: 200, // Standard width for the traditional panel
-                color: Colors.grey.shade200
-                    .withOpacity(0.9), // Slight transparency
+                width: 200,
+                color: Colors.grey.shade200.withOpacity(0.9),
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Traditional clickable text items for navigation
+                    // Traditional clickable text items for navigation
                     _buildNavButton("Posts", 0),
-                    _buildNavButton("Creators", 1),
-                    _buildNavButton(
-                        "Students", 3), // "Students" button for StudentsPage
-                    const Spacer(), // Space between the main options and bottom options
-                    // Settings, About, and Account moved to the bottom
-                    _buildNavButton("Account", 2),
-                    // Logout button with traditional style
+                    if (isDSA) _buildNavButton("Creators", 1),
+                    if (isDSA) _buildNavButton("Students", 3),
+                    const Spacer(),
+                    _buildNavButton("Account", isDSA ? 2 : 1),
+// Logout button with traditional style
+
                     TextButton(
                       onPressed: () {
                         // Reload the web page to simulate a restart
@@ -126,7 +145,9 @@ class _AdminHomeState extends State<AdminHome> {
                 flex: 4,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: _pages[_selectedIndex],
+                  child: _pages.isNotEmpty
+                      ? _pages[_selectedIndex]
+                      : Center(child: CircularProgressIndicator()),
                 ),
               ),
             ],
@@ -169,9 +190,9 @@ class _AdminHomeState extends State<AdminHome> {
             color: _selectedIndex == index
                 ? Colors.green.shade600
                 : Colors.grey.shade400,
-            width: 1.5, // Ensure this value is consistent for all buttons
+            width: 1.5,
           ),
-          borderRadius: BorderRadius.circular(12), // Consistent border radius
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
           label,

@@ -97,8 +97,8 @@ class _AccountVerificationState extends State<AccountVerification> {
             .update({'approvalStatus': newStatus});
 
         String userEmail = userDoc['email'] ?? '';
-        String clubID = userDoc['clubID'] ?? 'N/A';
-        String clubName = userDoc['clubName'] ?? 'N/A';
+        String clubID = userDoc['creatorId'] ?? 'N/A';
+        String clubName = userDoc['creatorName'] ?? 'N/A';
         String password = userDoc['password'] ?? 'N/A';
 
         if (newStatus == 'accepted') {
@@ -118,9 +118,6 @@ class _AccountVerificationState extends State<AccountVerification> {
 
   @override
   Widget build(BuildContext context) {
-    bool isDean = widget.username.endsWith('_DEAN');
-    String department = isDean ? widget.username.split('_')[0] : '';
-
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -189,7 +186,7 @@ class _AccountVerificationState extends State<AccountVerification> {
                         ],
                         rows: creators.map((user) {
                           String uid = user.id;
-                          String userName = user['clubName'] ?? 'N/A';
+                          String userName = user['creatorName'] ?? 'N/A';
                           String userEmail = user['email'] ?? 'N/A';
                           String userDepartment = user['department'] ?? 'N/A';
                           String approvalStatus =
@@ -208,9 +205,7 @@ class _AccountVerificationState extends State<AccountVerification> {
                               DataCell(Text(userEmail)),
                               DataCell(Text(userDepartment)),
                               DataCell(
-                                isDean && userDepartment == department ||
-                                        (userDepartment == "Non Academic" &&
-                                            widget.username == "DSA")
+                                widget.username == "DSA"
                                     ? approvalStatus == 'pending'
                                         ? Row(
                                             children: [

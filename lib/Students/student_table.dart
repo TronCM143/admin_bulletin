@@ -61,9 +61,6 @@ class StudentsPage extends StatelessWidget {
                               dataRowHeight: 56.0,
                               columns: const [
                                 DataColumn(
-                                    label:
-                                        Expanded(child: Text('Date Created'))),
-                                DataColumn(
                                     label: Expanded(child: Text('First Name'))),
                                 DataColumn(
                                     label: Expanded(child: Text('Last Name'))),
@@ -75,10 +72,6 @@ class StudentsPage extends StatelessWidget {
                               rows: students.map((student) {
                                 return DataRow(
                                   cells: [
-                                    DataCell(Text(student['createDate']
-                                            ?.toDate()
-                                            .toString() ??
-                                        'N/A')),
                                     DataCell(
                                         Text(student['firstName'] ?? 'N/A')),
                                     DataCell(

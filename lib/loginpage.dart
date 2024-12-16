@@ -33,6 +33,9 @@ class _LoginPageState extends State<LoginPage> {
         // Retrieve the password field
         String storedPassword = userDoc.get('password');
 
+        print("Stored Password: $storedPassword");
+        print("Entered Password: $password");
+
         if (storedPassword == password) {
           print("Login successful!");
           // Navigate to the admin home page
@@ -49,6 +52,7 @@ class _LoginPageState extends State<LoginPage> {
         _showMessage(context, "User does not exist!");
       }
     } catch (e) {
+      print("Error: $e"); // Log the error for debugging
       _showMessage(context, "An error occurred: $e");
     }
   }

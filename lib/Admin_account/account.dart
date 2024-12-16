@@ -78,6 +78,11 @@ class _AccountPageState extends State<AccountPage> {
             image: AssetImage(
                 'assets/logo_ndmu.png'), // Replace with your image path
             fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Colors.white.withOpacity(0.1), // Adjust opacity here (0.0 to 1.0)
+              BlendMode
+                  .dstATop, // Use dstATop to apply opacity on top of the image
+            ),
           ),
         ),
         child: Padding(
@@ -86,13 +91,13 @@ class _AccountPageState extends State<AccountPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Admin ID: ${widget.username}',
-                style: const TextStyle(fontSize: 20, color: Colors.white),
+                'name: ${widget.username}',
+                style: const TextStyle(fontSize: 20, color: Colors.black),
               ),
               const SizedBox(height: 20),
               const Text(
                 'Current Password:',
-                style: TextStyle(fontSize: 18, color: Colors.white),
+                style: TextStyle(fontSize: 18, color: Colors.black),
               ),
               const SizedBox(height: 8),
               TextField(
@@ -101,9 +106,9 @@ class _AccountPageState extends State<AccountPage> {
                 readOnly: true,
                 decoration: InputDecoration(
                   hintText: '••••••••',
-                  hintStyle: TextStyle(color: Colors.white54),
+                  hintStyle: TextStyle(color: Colors.black),
                   filled: true,
-                  fillColor: Colors.black.withOpacity(0.5),
+                  fillColor: Colors.white.withOpacity(0.5),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _isPasswordVisible
@@ -130,9 +135,9 @@ class _AccountPageState extends State<AccountPage> {
                 obscureText: !_isNewPasswordVisible,
                 decoration: InputDecoration(
                   hintText: 'Enter your new password',
-                  hintStyle: TextStyle(color: Colors.white54),
+                  hintStyle: TextStyle(color: Colors.black),
                   filled: true,
-                  fillColor: Colors.black.withOpacity(0.5),
+                  fillColor: Colors.white.withOpacity(0.5),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _isNewPasswordVisible
