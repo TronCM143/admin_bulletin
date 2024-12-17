@@ -26,6 +26,7 @@ class _AdminHomeState extends State<AdminHome> {
   void initState() {
     super.initState();
     _initializePages();
+    html.document.title = "AppDate Admin Dashboard";
   }
 
   Future<void> _initializePages() async {
@@ -79,12 +80,12 @@ class _AdminHomeState extends State<AdminHome> {
               var adminData = snapshot.data!.data() as Map<String, dynamic>;
               String adminName = adminData['name'] ?? 'Admin';
               return Text(
-                'AppDate - $adminName',
+                'Bulletin Board',
                 style: const TextStyle(color: Colors.white),
               );
             } else {
               return const Text(
-                'AppDate',
+                'Bulletin Board',
                 style: TextStyle(color: Colors.white),
               );
             }
@@ -154,24 +155,27 @@ class _AdminHomeState extends State<AdminHome> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          // Get the admin name from Firestore
-          DocumentSnapshot adminSnapshot = await FirebaseFirestore.instance
-              .collection('admin')
-              .doc(widget.username)
-              .get();
+      floatingActionButton: isDSA
+          ? FloatingActionButton(
+              onPressed: () async {
+                // Get the admin name from Firestore
+                DocumentSnapshot adminSnapshot = await FirebaseFirestore
+                    .instance
+                    .collection('admin')
+                    .doc(widget.username)
+                    .get();
 
-          if (adminSnapshot.exists) {
-            var adminData = adminSnapshot.data() as Map<String, dynamic>;
-            String adminName = adminData['name'] ?? 'Admin';
+                if (adminSnapshot.exists) {
+                  var adminData = adminSnapshot.data() as Map<String, dynamic>;
+                  String adminName = adminData['name'] ?? 'Admin';
 
-            await CalendarPage.showEventDialog(context, adminName);
-          }
-        },
-        backgroundColor: Colors.green.shade600,
-        child: const Icon(Icons.calendar_month_rounded),
-      ),
+                  await CalendarPage.showEventDialog(context, adminName);
+                }
+              },
+              backgroundColor: Colors.green.shade600,
+              child: const Icon(Icons.calendar_month_rounded),
+            )
+          : null,
     );
   }
 

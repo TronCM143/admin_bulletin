@@ -9,13 +9,17 @@ class Posts extends StatefulWidget {
   const Posts({Key? key, required this.username}) : super(key: key);
 
   @override
-  _PostsState createState() => _PostsState();
+  _PostsState createState() => _PostsState(username: username);
 }
 
 class _PostsState extends State<Posts> {
   List<QueryDocumentSnapshot> allPosts = [];
   bool isLoading = true;
   Map<String, String> postStatusMap = {};
+
+  final String username;
+
+  _PostsState({required this.username});
 
   @override
   void initState() {
@@ -140,6 +144,7 @@ class _PostsState extends State<Posts> {
       'MOD_Kariktan',
       'MOD_Kutitap Theatre',
       'MOD_PSITS',
+      'MOD_JPIA',
       'MOD_BLIS',
       'MOD_PICE',
       'MOD_CSD',
@@ -252,7 +257,7 @@ class _PostsState extends State<Posts> {
                                 ),
                               ),
                             )
-                          : _buildPostTable(context),
+                          : _buildPostTable(context, username),
                     ),
                   ],
                 ),
@@ -261,7 +266,7 @@ class _PostsState extends State<Posts> {
     );
   }
 
-  Widget _buildPostTable(BuildContext context) {
+  Widget _buildPostTable(BuildContext context, String username) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: ConstrainedBox(
@@ -279,28 +284,29 @@ class _PostsState extends State<Posts> {
             },
           ),
           dataRowHeight: 70,
-          columns: const [
-            DataColumn(
-                label: Text('Time',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(
-                label: Text('Name',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(
-                label: Text('Title',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(
-                label: Text('Content',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(
-                label: Text('Attachments',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(
-                label: Text('Set Post Expiry (DSA)',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(
+          columns: [
+            const DataColumn(
                 label: Text('Status',
                     style: TextStyle(fontWeight: FontWeight.bold))),
+            const DataColumn(
+                label: Text('Time',
+                    style: TextStyle(fontWeight: FontWeight.bold))),
+            const DataColumn(
+                label: Text('Name',
+                    style: TextStyle(fontWeight: FontWeight.bold))),
+            const DataColumn(
+                label: Text('Title',
+                    style: TextStyle(fontWeight: FontWeight.bold))),
+            const DataColumn(
+                label: Text('Content',
+                    style: TextStyle(fontWeight: FontWeight.bold))),
+            const DataColumn(
+                label: Text('Attachments',
+                    style: TextStyle(fontWeight: FontWeight.bold))),
+            if (username == "DSA")
+              const DataColumn(
+                  label: Text('Set Post Expiry',
+                      style: TextStyle(fontWeight: FontWeight.bold))),
           ],
           rows: allPosts.map((post) {
             final postData = post.data() as Map<String, dynamic>;
@@ -318,61 +324,6 @@ class _PostsState extends State<Posts> {
                 postData['expirationDate']?.toDate() ?? DateTime.now();
 
             return DataRow(cells: [
-              DataCell(Text(formattedTime)),
-              DataCell(Text(name)),
-              DataCell(
-                GestureDetector(
-                  onTap: () => _showFullTextDialog(context, title, 'Title'),
-                  child: Container(
-                    width: 200,
-                    child: Text(
-                      title,
-                      softWrap: true,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-              ),
-              DataCell(
-                GestureDetector(
-                  onTap: () => _showFullTextDialog(context, content, 'Content'),
-                  child: Container(
-                    width: 200,
-                    child: Text(
-                      content,
-                      softWrap: true,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-              ),
-              DataCell(_buildAttachments(imageUrls)),
-              // Add the "Post Expiry" cell conditionally
-              DataCell(
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: postExpiry,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2101),
-                    );
-
-                    if (pickedDate != null && pickedDate != postExpiry) {
-                      _updateExpiryDate(postId, pickedDate);
-                    }
-                  },
-                  icon: Icon(Icons.calendar_today,
-                      color: Colors.white), // Calendar icon
-                  label: const Text(
-                    'Set Date',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green // No shadow
-                      ),
-                ),
-              ),
               DataCell(Row(
                 children: [
                   Text(status),
@@ -392,6 +343,68 @@ class _PostsState extends State<Posts> {
                   ],
                 ],
               )),
+              DataCell(Row(
+                children: [
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text(formattedTime),
+                ],
+              )),
+              DataCell(Text(name)),
+              DataCell(
+                GestureDetector(
+                  onTap: () => _showFullTextDialog(context, title, 'Title'),
+                  child: Container(
+                    width: 100,
+                    child: Text(
+                      title,
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ),
+              DataCell(
+                GestureDetector(
+                  onTap: () => _showFullTextDialog(context, content, 'Content'),
+                  child: Container(
+                    width: 100,
+                    child: Text(
+                      content,
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ),
+              DataCell(_buildAttachments(imageUrls)),
+              if (username == "DSA")
+                DataCell(
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: postExpiry,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2101),
+                      );
+
+                      if (pickedDate != null && pickedDate != postExpiry) {
+                        _updateExpiryDate(postId, pickedDate);
+                      }
+                    },
+                    icon: Icon(Icons.calendar_today,
+                        color: Colors.white), // Calendar icon
+                    label: const Text(
+                      'Set Date',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green // No shadow
+                        ),
+                  ),
+                ),
             ]);
           }).toList(),
         ),
