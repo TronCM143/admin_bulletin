@@ -155,27 +155,6 @@ class _AdminHomeState extends State<AdminHome> {
           ),
         ],
       ),
-      floatingActionButton: isDSA
-          ? FloatingActionButton(
-              onPressed: () async {
-                // Get the admin name from Firestore
-                DocumentSnapshot adminSnapshot = await FirebaseFirestore
-                    .instance
-                    .collection('admin')
-                    .doc(widget.username)
-                    .get();
-
-                if (adminSnapshot.exists) {
-                  var adminData = adminSnapshot.data() as Map<String, dynamic>;
-                  String adminName = adminData['name'] ?? 'Admin';
-
-                  await CalendarPage.showEventDialog(context, adminName);
-                }
-              },
-              backgroundColor: Colors.green.shade600,
-              child: const Icon(Icons.calendar_month_rounded),
-            )
-          : null,
     );
   }
 
