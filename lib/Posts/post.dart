@@ -154,7 +154,7 @@ class _PostsState extends State<Posts> {
       'CAS_DEAN',
       'CBA_DEAN',
       'CED_DEAN',
-      'QUAPS',
+      'QAPS',
       'DSA',
       'ACAD_VP',
       'VP_ADMIN'
@@ -267,148 +267,202 @@ class _PostsState extends State<Posts> {
   }
 
   Widget _buildPostTable(BuildContext context, String username) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: ConstrainedBox(
-        constraints:
-            BoxConstraints(minWidth: MediaQuery.of(context).size.width),
-        child: DataTable(
-          headingRowColor:
-              MaterialStateProperty.all(Colors.blueAccent.withOpacity(0.1)),
-          dataRowColor: MaterialStateProperty.resolveWith<Color?>(
-            (Set<MaterialState> states) {
-              if (states.contains(MaterialState.selected)) {
-                return Colors.grey.withOpacity(0.2);
-              }
-              return Colors.transparent;
-            },
-          ),
-          dataRowHeight: 70,
-          columns: [
-            const DataColumn(
-                label: Text('Status',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            const DataColumn(
-                label: Text('Time',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            const DataColumn(
-                label: Text('Name',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            const DataColumn(
-                label: Text('Title',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            const DataColumn(
-                label: Text('Content',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            const DataColumn(
-                label: Text('Attachments',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            if (username == "DSA")
-              const DataColumn(
-                  label: Text('Set Post Expiry',
-                      style: TextStyle(fontWeight: FontWeight.bold))),
-          ],
-          rows: allPosts.map((post) {
-            final postData = post.data() as Map<String, dynamic>;
-            final title = postData['title'] ?? 'No Title';
-            final postId = post.id;
-            final content = postData['content'] ?? 'No content available';
-            final imageUrls = postData['imageUrls'] ?? [];
-            final timestamp = postData['timestamp'] as Timestamp;
-            final postTime = timestamp.toDate();
-            final name = postData['creatorName'] ?? 'No Name';
-            final formattedTime =
-                DateFormat('MMM dd, yyyy HH:mm').format(postTime);
-            final status = postStatusMap[postId] ?? 'pending';
-            final postExpiry =
-                postData['expirationDate']?.toDate() ?? DateTime.now();
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final screenWidth = constraints.maxWidth;
 
-            return DataRow(cells: [
-              DataCell(Row(
-                children: [
-                  Text(status),
-                  if (status == 'pending') ...[
-                    IconButton(
-                      icon: const Icon(Icons.check, color: Colors.green),
-                      onPressed: () {
-                        _updatePostStatus(postId, 'accepted');
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.red),
-                      onPressed: () {
-                        _updatePostStatus(postId, 'rejected');
-                      },
-                    ),
-                  ],
-                ],
-              )),
-              DataCell(Row(
-                children: [
-                  SizedBox(
-                    width: 10,
-                  ),
-                  Text(formattedTime),
-                ],
-              )),
-              DataCell(Text(name)),
-              DataCell(
-                GestureDetector(
-                  onTap: () => _showFullTextDialog(context, title, 'Title'),
-                  child: Container(
-                    width: 100,
-                    child: Text(
-                      title,
-                      softWrap: true,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: screenWidth,
+            ),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: DataTable(
+                headingRowColor: MaterialStateProperty.all(
+                    Colors.blueAccent.withOpacity(0.1)),
+                dataRowColor: MaterialStateProperty.resolveWith<Color?>(
+                  (Set<MaterialState> states) {
+                    if (states.contains(MaterialState.selected)) {
+                      return Colors.grey.withOpacity(0.2);
+                    }
+                    return Colors.transparent;
+                  },
                 ),
-              ),
-              DataCell(
-                GestureDetector(
-                  onTap: () => _showFullTextDialog(context, content, 'Content'),
-                  child: Container(
-                    width: 100,
-                    child: Text(
-                      content,
-                      softWrap: true,
-                      overflow: TextOverflow.ellipsis,
+                dataRowHeight: 70,
+                columnSpacing: screenWidth * 0.02, // Dynamically adjust spacing
+                columns: [
+                  DataColumn(
+                    label: Flexible(
+                      child: Text(
+                        'Status',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
-                ),
-              ),
-              DataCell(_buildAttachments(imageUrls)),
-              if (username == "DSA")
-                DataCell(
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      DateTime? pickedDate = await showDatePicker(
-                        context: context,
-                        initialDate: postExpiry,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2101),
-                      );
-
-                      if (pickedDate != null && pickedDate != postExpiry) {
-                        _updateExpiryDate(postId, pickedDate);
-                      }
-                    },
-                    icon: Icon(Icons.calendar_today,
-                        color: Colors.white), // Calendar icon
-                    label: const Text(
-                      'Set Date',
-                      style: TextStyle(color: Colors.white),
+                  DataColumn(
+                    label: Flexible(
+                      child: Text(
+                        'Time',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green // No shadow
+                  ),
+                  DataColumn(
+                    label: Flexible(
+                      child: Text(
+                        'Name',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Flexible(
+                      child: Text(
+                        'Title',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Flexible(
+                      child: Text(
+                        'Content',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Flexible(
+                      child: Text(
+                        'Attachments',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  if (username == "DSA")
+                    DataColumn(
+                      label: Flexible(
+                        child: Text(
+                          'Set Post Expiry',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                  ),
-                ),
-            ]);
-          }).toList(),
-        ),
-      ),
+                      ),
+                    ),
+                ],
+                rows: allPosts.map((post) {
+                  final postData = post.data() as Map<String, dynamic>;
+                  final title = postData['title'] ?? 'No Title';
+                  final postId = post.id;
+                  final content = postData['content'] ?? 'No content available';
+                  final imageUrls = postData['imageUrls'] ?? [];
+                  final timestamp = postData['timestamp'] as Timestamp;
+                  final postTime = timestamp.toDate();
+                  final name = postData['creatorName'] ?? 'No Name';
+                  final formattedTime =
+                      DateFormat('MMM dd, yyyy HH:mm').format(postTime);
+                  final status = postStatusMap[postId] ?? 'pending';
+                  final postExpiry =
+                      postData['expirationDate']?.toDate() ?? DateTime.now();
+
+                  return DataRow(cells: [
+                    DataCell(Row(
+                      children: [
+                        Text(status),
+                        if (status == 'pending') ...[
+                          IconButton(
+                            icon: const Icon(Icons.check, color: Colors.green),
+                            onPressed: () {
+                              _updatePostStatus(postId, 'accepted');
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.red),
+                            onPressed: () {
+                              _updatePostStatus(postId, 'rejected');
+                            },
+                          ),
+                        ],
+                      ],
+                    )),
+                    DataCell(Row(
+                      children: [
+                        SizedBox(width: 10),
+                        Text(formattedTime),
+                      ],
+                    )),
+                    DataCell(Text(name)),
+                    DataCell(
+                      GestureDetector(
+                        onTap: () =>
+                            _showFullTextDialog(context, title, 'Title'),
+                        child: Container(
+                          width: screenWidth * 0.2, // Adjust width dynamically
+                          child: Text(
+                            title,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      GestureDetector(
+                        onTap: () =>
+                            _showFullTextDialog(context, content, 'Content'),
+                        child: Container(
+                          width: screenWidth * 0.2, // Adjust width dynamically
+                          child: Text(
+                            content,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ),
+                    DataCell(_buildAttachments(imageUrls)),
+                    if (username == "DSA")
+                      DataCell(
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            DateTime? pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: postExpiry,
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2101),
+                            );
+
+                            if (pickedDate != null &&
+                                pickedDate != postExpiry) {
+                              _updateExpiryDate(postId, pickedDate);
+                            }
+                          },
+                          icon: Icon(Icons.calendar_today,
+                              color: Colors.white), // Calendar icon
+                          label: const Text(
+                            'Set Date',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green // No shadow
+                              ),
+                        ),
+                      ),
+                  ]);
+                }).toList(),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
